@@ -11,40 +11,27 @@ class TwitterService {
    * Search tweets using RSS-Bridge with working proxy
    */
   async searchTweets(query, limit = 15) {
-    try {
-      const cleanQuery = query.replace('@', '');
-      
-      // Build the RSS-Bridge URL
-      const rssUrl = `${this.rssBridgeBase}/?action=display&bridge=X&context=search&q=${encodeURIComponent(cleanQuery)}&n=${limit}&format=Atom`;
-      
-      // Use AllOrigins proxy (still free and working)
-      const proxyUrl = `${this.proxyUrl}${encodeURIComponent(rssUrl)}`;
-      
-      console.log('Fetching via proxy:', proxyUrl);
-      
-      const response = await axios.get(proxyUrl, {
-        timeout: 10000,
-        headers: {
-          'Accept': 'application/xml, text/xml'
-        }
-      });
-
-      if (response.data) {
-        const tweets = this.parseAtomFeed(response.data, cleanQuery);
-        if (tweets.length > 0) {
-          return tweets;
-        }
-      }
-      
-      // If no tweets, try the user endpoint
-      return await this.getUserTweets(cleanQuery, limit);
-      
-    } catch (error) {
-      console.error('Proxy fetch failed:', error.message);
-      // Try backup proxy
-      return await this.tryBackupProxy(query, limit);
-    }
+  try {
+    const cleanQuery = query.replace('@', '');
+    
+    // Use your Railway proxy in production
+    const baseUrl = import.meta.env.PROD 
+      ? '/api/proxy'  // Railway will handle this
+      : 'https://xexus.onrender.com'; // Dev direct access
+    
+    const targetUrl = `https://xexus.onrender.com/?action=display&bridge=X&context=search&q=${encodeURIComponent(cleanQuery)}&n=${limit}&format=Atom`;
+    
+    const response = await axios.get(
+      import.meta.env.PROD 
+        ? `${window.location.origin}/api/proxy?url=${encodeURIComponent(targetUrl)}`
+        : targetUrl
+    );
+    
+    return this.parseAtomFeed(response.data, cleanQuery);
+  } catch (error) {
+    return this.getMockTwitterData(query);
   }
+}
 
   /**
    * Try backup proxy if main one fails

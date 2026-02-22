@@ -13,22 +13,46 @@ class NewsService {
 
   // Fetch top headlines with pagination [citation:2]
   async getTopHeadlines(country = 'us', category = 'general', page = 1, pageSize = 20) {
-    try {
-      const response = await axios.get(`${this.newsApiBase}/top-headlines`, {
-        params: {
-          country,
-          category,
-          page,
-          pageSize,
-          apiKey: NEWS_API_KEY
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching headlines:', error);
-      throw error;
+  try {
+    // Check if API key exists
+    if (!import.meta.env.VITE_NEWS_API_KEY) {
+      console.warn('NewsAPI key missing, using mock data');
+      return this.getMockHeadlines(category);
     }
+    
+    const response = await axios.get(`${this.newsApiBase}/top-headlines`, {
+      params: {
+        country,
+        category,
+        page,
+        pageSize,
+        apiKey: import.meta.env.VITE_NEWS_API_KEY
+      },
+      timeout: 5000
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching headlines:', error);
+    // Return mock data as fallback
+    return {
+      articles: this.getMockHeadlines(category),
+      totalResults: 3
+    };
   }
+}
+
+// Add mock data method
+getMockHeadlines(category) {
+  return [
+    {
+      title: `Latest ${category} news`,
+      description: 'Stay tuned for updates...',
+      url: '#',
+      source: { name: 'News Service' },
+      publishedAt: new Date().toISOString()
+    }
+  ];
+}
 
   // Search everything with filters
   async searchNews(query, filters = {}, page = 1) {
