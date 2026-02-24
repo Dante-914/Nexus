@@ -330,199 +330,201 @@ export default function MemoryGame() {
   };
 
   return (
-    <div className="memory-game-container">
-      <div className="memory-game-header">
-        <h1>🧠 Theme Match</h1>
-        <div className="game-stats">
-          {gameState === 'playing' && (
-            <>
-              <div className="stat">
-                <span className="stat-label">Moves</span>
-                <span className="stat-value">{moves}</span>
-              </div>
-              <div className="stat">
-                <span className="stat-label">Time</span>
-                <span className="stat-value">{formatTime(time)}</span>
-              </div>
-              <div className="stat">
-                <span className="stat-label">Score</span>
-                <span className="stat-value">{score}</span>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Game Menu */}
-      {gameState === 'menu' && (
-        <div className="game-menu">
-          <h2>Game Settings</h2>
-          
-          {gameMessage && <div className="error-message">{gameMessage}</div>}
-
-          <div className="settings-section">
-            <h3>Select Theme</h3>
-            <div className="theme-selector">
-              {Object.entries(themes).map(([key, themeData]) => (
-                <button
-                  key={key}
-                  className={`theme-btn ${theme === key ? 'active' : ''}`}
-                  onClick={() => setTheme(key)}
-                >
-                  <span className="theme-emoji">{themeData.emojis[0]}</span>
-                  <span className="theme-name">{themeData.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="settings-section">
-            <h3>Difficulty</h3>
-            <div className="difficulty-selector">
-              {['easy', 'medium', 'hard'].map(level => (
-                <button
-                  key={level}
-                  className={`difficulty-btn ${difficulty === level ? 'active' : ''}`}
-                  onClick={() => setDifficulty(level)}
-                >
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
-                  <span className="difficulty-desc">
-                    {difficultySettings[level].pairs} pairs
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button onClick={startGame} className="start-game-btn">
-            Start Game 🚀
-          </button>
-
-          {/* Personal Best */}
-          {personalBest && (
-            <div className="personal-best">
-              <h3>🏆 Your Best</h3>
-              <div className="best-score">{personalBest}</div>
-            </div>
-          )}
-
-          {/* High Scores */}
-          <div className="high-scores">
-            <h3>🏆 Global High Scores</h3>
-            {loadingScores ? (
-              <div className="loading-scores">Loading scores...</div>
-            ) : (
-              <div className="scores-list">
-                {highScores.map((score, index) => (
-                  <div key={score.id || index} className="score-item">
-                    <span className="score-rank">#{index + 1}</span>
-                    <span className="score-name">{score.userName || 'Anonymous'}</span>
-                    <span className="score-value">{score.score}</span>
-                    <span className="score-meta">
-                      {score.difficulty} • {Math.floor(score.time / 60)}:{(score.time % 60).toString().padStart(2, '0')}
-                    </span>
-                  </div>
-                ))}
-                {highScores.length === 0 && !loadingScores && (
-                  <p className="no-scores">No scores yet. Be the first!</p>
-                )}
-              </div>
+    <div className="page-container">
+      <div className="memory-game-container">
+        <div className="memory-game-header">
+          <h1>Theme Match</h1>
+          <div className="game-stats">
+            {gameState === 'playing' && (
+              <>
+                <div className="stat">
+                  <span className="stat-label">Moves</span>
+                  <span className="stat-value">{moves}</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">Time</span>
+                  <span className="stat-value">{formatTime(time)}</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">Score</span>
+                  <span className="stat-value">{score}</span>
+                </div>
+              </>
             )}
           </div>
         </div>
-      )}
 
-      {/* Game Board */}
-      {gameState === 'playing' && (
-        <div className="game-board">
-          <div 
-            className="cards-grid" 
-            style={{ 
-              gridTemplateColumns: `repeat(${difficultySettings[difficulty].gridCols}, 1fr)` 
-            }}
-          >
-            {cards.map((card, index) => (
-              <div
-                key={index}
-                className={`card ${card.flipped ? 'flipped' : ''} ${card.matched ? 'matched' : ''}`}
-                onClick={() => handleCardClick(index)}
-              >
-                <div className="card-inner">
-                  <div className="card-front">
-                    <span className="card-emoji">{card.emoji}</span>
-                  </div>
-                  <div className="card-back">
-                    <span className="card-icon">❓</span>
+        {/* Game Menu */}
+        {gameState === 'menu' && (
+          <div className="game-menu">
+            <h2>Game Settings</h2>
+            
+            {gameMessage && <div className="error-message">{gameMessage}</div>}
+
+            <div className="settings-section">
+              <h3>Select Theme</h3>
+              <div className="theme-selector">
+                {Object.entries(themes).map(([key, themeData]) => (
+                  <button
+                    key={key}
+                    className={`theme-btn ${theme === key ? 'active' : ''}`}
+                    onClick={() => setTheme(key)}
+                  >
+                    <span className="theme-emoji">{themeData.emojis[0]}</span>
+                    <span className="theme-name">{themeData.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <h3>Difficulty</h3>
+              <div className="difficulty-selector">
+                {['easy', 'medium', 'hard'].map(level => (
+                  <button
+                    key={level}
+                    className={`difficulty-btn ${difficulty === level ? 'active' : ''}`}
+                    onClick={() => setDifficulty(level)}
+                  >
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                    <span className="difficulty-desc">
+                      {difficultySettings[level].pairs} pairs
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={startGame} className="start-game-btn">
+              Start Game
+            </button>
+
+            {/* Personal Best */}
+            {personalBest && (
+              <div className="personal-best">
+                <h3>Your Best</h3>
+                <div className="best-score">{personalBest}</div>
+              </div>
+            )}
+
+            {/* High Scores */}
+            <div className="high-scores">
+              <h3>Global High Scores</h3>
+              {loadingScores ? (
+                <div className="loading-scores">Loading scores...chill</div>
+              ) : (
+                <div className="scores-list">
+                  {highScores.map((score, index) => (
+                    <div key={score.id || index} className="score-item">
+                      <span className="score-rank">#{index + 1}</span>
+                      <span className="score-name">{score.userName || 'Anonymous'}</span>
+                      <span className="score-value">{score.score}</span>
+                      <span className="score-meta">
+                        {score.difficulty} • {Math.floor(score.time / 60)}:{(score.time % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
+                  ))}
+                  {highScores.length === 0 && !loadingScores && (
+                    <p className="no-scores">No scores yet. Be the first!</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Game Board */}
+        {gameState === 'playing' && (
+          <div className="game-board">
+            <div 
+              className="cards-grid" 
+              style={{ 
+                gridTemplateColumns: `repeat(${difficultySettings[difficulty].gridCols}, 1fr)` 
+              }}
+            >
+              {cards.map((card, index) => (
+                <div
+                  key={index}
+                  className={`card ${card.flipped ? 'flipped' : ''} ${card.matched ? 'matched' : ''}`}
+                  onClick={() => handleCardClick(index)}
+                >
+                  <div className="card-inner">
+                    <div className="card-front">
+                      <span className="card-emoji">{card.emoji}</span>
+                    </div>
+                    <div className="card-back">
+                      <span className="card-icon">❓</span>
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            <button onClick={startGame} className="new-game-btn">
+              New Game
+            </button>
+          </div>
+        )}
+
+        {/* Game Completed */}
+        {gameState === 'completed' && (
+          <div className="game-completed">
+            <h2>Game Complete! 🎉</h2>
+            <div className="final-stats">
+              <div className="final-stat">
+                <span>Final Score</span>
+                <strong>{score + (difficultySettings[difficulty].timeBonus * 2)}</strong>
               </div>
+              <div className="final-stat">
+                <span>Total Moves</span>
+                <strong>{moves}</strong>
+              </div>
+              <div className="final-stat">
+                <span>Time Taken</span>
+                <strong>{formatTime(time)}</strong>
+              </div>
+            </div>
+            
+            {personalBest && (score + (difficultySettings[difficulty].timeBonus * 2) > personalBest) && (
+              <div className="new-record">
+                🎉 New Personal Best! 🎉
+              </div>
+            )}
+            
+            <div className="completion-actions">
+              <button onClick={startGame} className="play-again-btn">
+                Play Again
+              </button>
+              <button 
+                onClick={() => {
+                  setGameState('menu');
+                  fetchHighScores(); // Refresh scores when returning to menu
+                }} 
+                className="menu-btn"
+              >
+                Main Menu
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Celebration Animation */}
+        {showCelebration && (
+          <div className="celebration">
+            {[...Array(20)].map((_, i) => (
+              <div
+                key={i}
+                className="confetti"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  backgroundColor: themes[theme].colors[i % themes[theme].colors.length]
+                }}
+              />
             ))}
           </div>
-
-          <button onClick={startGame} className="new-game-btn">
-            New Game
-          </button>
-        </div>
-      )}
-
-      {/* Game Completed */}
-      {gameState === 'completed' && (
-        <div className="game-completed">
-          <h2>Game Complete! 🎉</h2>
-          <div className="final-stats">
-            <div className="final-stat">
-              <span>Final Score</span>
-              <strong>{score + (difficultySettings[difficulty].timeBonus * 2)}</strong>
-            </div>
-            <div className="final-stat">
-              <span>Total Moves</span>
-              <strong>{moves}</strong>
-            </div>
-            <div className="final-stat">
-              <span>Time Taken</span>
-              <strong>{formatTime(time)}</strong>
-            </div>
-          </div>
-          
-          {personalBest && (score + (difficultySettings[difficulty].timeBonus * 2) > personalBest) && (
-            <div className="new-record">
-              🎉 New Personal Best! 🎉
-            </div>
-          )}
-          
-          <div className="completion-actions">
-            <button onClick={startGame} className="play-again-btn">
-              Play Again
-            </button>
-            <button 
-              onClick={() => {
-                setGameState('menu');
-                fetchHighScores(); // Refresh scores when returning to menu
-              }} 
-              className="menu-btn"
-            >
-              Main Menu
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Celebration Animation */}
-      {showCelebration && (
-        <div className="celebration">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="confetti"
-              style={{
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 2}s`,
-                backgroundColor: themes[theme].colors[i % themes[theme].colors.length]
-              }}
-            />
-          ))}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

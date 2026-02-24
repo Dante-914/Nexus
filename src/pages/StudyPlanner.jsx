@@ -243,303 +243,305 @@ export default function StudyPlanner() {
   }
 
   return (
-    <div className="study-container">
-      <div className="study-header">
-        <h1>📚 Study Planner</h1>
-        <div className="study-stats">
-          <div className="stat-card">
-            <span className="stat-value">{totalStudyTime.toFixed(0)}</span>
-            <span className="stat-label">Total Hours</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-value">{totalPomodoros}</span>
-            <span className="stat-label">Pomodoros</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-value">{averagePerDay}</span>
-            <span className="stat-label">Hours/Day</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="study-tabs">
-        <button 
-          className={`tab-btn ${activeTab === 'timer' ? 'active' : ''}`}
-          onClick={() => setActiveTab('timer')}
-        >
-          ⏱️ Timer
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'schedule' ? 'active' : ''}`}
-          onClick={() => setActiveTab('schedule')}
-        >
-          📅 Schedule
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
-          onClick={() => setActiveTab('stats')}
-        >
-          📊 Statistics
-        </button>
-      </div>
-
-      {/* Timer Tab */}
-      {activeTab === 'timer' && (
-        <div className="timer-tab">
-          <div className="timer-modes">
-            <button 
-              className={`mode-btn ${timerMode === 'pomodoro' ? 'active' : ''}`}
-              onClick={() => switchTimerMode('pomodoro')}
-            >
-              🍅 Pomodoro
-            </button>
-            <button 
-              className={`mode-btn ${timerMode === 'shortBreak' ? 'active' : ''}`}
-              onClick={() => switchTimerMode('shortBreak')}
-            >
-              ☕ Short Break
-            </button>
-            <button 
-              className={`mode-btn ${timerMode === 'longBreak' ? 'active' : ''}`}
-              onClick={() => switchTimerMode('longBreak')}
-            >
-              🌴 Long Break
-            </button>
-          </div>
-
-          <div className="timer-display">
-            <div className="timer-circle">
-              <span className="timer-time">{formatTime(timeLeft)}</span>
+    <div className="page-container">
+      <div className="study-container">
+        <div className="study-header">
+          <h1>📚 Study Planner</h1>
+          <div className="study-stats">
+            <div className="stat-card">
+              <span className="stat-value">{totalStudyTime.toFixed(0)}</span>
+              <span className="stat-label">Total Hours</span>
             </div>
-            <div className="timer-controls">
-              {!timerRunning && !timerPaused ? (
-                <button onClick={startTimer} className="timer-btn start">
-                  ▶ Start
-                </button>
-              ) : (
-                <>
-                  <button onClick={pauseTimer} className="timer-btn pause">
-                    ⏸ Pause
-                  </button>
-                  <button onClick={resetTimer} className="timer-btn reset">
-                    ↺ Reset
-                  </button>
-                </>
-              )}
+            <div className="stat-card">
+              <span className="stat-value">{totalPomodoros}</span>
+              <span className="stat-label">Pomodoros</span>
             </div>
-          </div>
-
-          <div className="current-task">
-            <label>What are you studying?</label>
-            <select 
-              value={taskSubject} 
-              onChange={(e) => setTaskSubject(e.target.value)}
-              className="subject-select"
-            >
-              {subjects.map(subject => (
-                <option key={subject} value={subject}>{subject}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              value={currentTask}
-              onChange={(e) => setCurrentTask(e.target.value)}
-              placeholder="e.g., Chapter 5, Exercise set..."
-              className="task-input"
-            />
-          </div>
-
-          <div className="pomodoro-counter">
-            <span>Pomodoros completed today: </span>
-            <span className="counter-value">{pomodoroCount}</span>
-          </div>
-
-          <div className="recent-sessions">
-            <h3>Recent Sessions</h3>
-            <div className="sessions-list">
-              {studySessions.slice(0, 5).map(session => (
-                <div key={session.id} className="session-item">
-                  <span className="session-time">
-                    {format(session.startTime?.toDate(), 'h:mm a')}
-                  </span>
-                  <span className="session-task">{session.task || 'Study'}</span>
-                  <span className="session-duration">
-                    {Math.round(session.duration / 60)} min
-                  </span>
-                </div>
-              ))}
+            <div className="stat-card">
+              <span className="stat-value">{averagePerDay}</span>
+              <span className="stat-label">Hours/Day</span>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Schedule Tab */}
-      {activeTab === 'schedule' && (
-        <div className="schedule-tab">
-          <div className="date-selector">
-            <input
-              type="date"
-              value={format(selectedDate, 'yyyy-MM-dd')}
-              onChange={(e) => setSelectedDate(new Date(e.target.value))}
-              className="date-input"
-            />
-          </div>
+        {/* Tab Navigation */}
+        <div className="study-tabs">
+          <button 
+            className={`tab-btn ${activeTab === 'timer' ? 'active' : ''}`}
+            onClick={() => setActiveTab('timer')}
+          >
+            ⏱️ Timer
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'schedule' ? 'active' : ''}`}
+            onClick={() => setActiveTab('schedule')}
+          >
+            📅 Schedule
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
+            onClick={() => setActiveTab('stats')}
+          >
+            📊 Statistics
+          </button>
+        </div>
 
-          <form onSubmit={addTask} className="add-task-form">
-            <input
-              type="text"
-              value={newTask}
-              onChange={(e) => setNewTask(e.target.value)}
-              placeholder="Task name..."
-              className="task-input"
-              required
-            />
-            <div className="task-form-row">
-              <select value={taskSubject} onChange={(e) => setTaskSubject(e.target.value)}>
+        {/* Timer Tab */}
+        {activeTab === 'timer' && (
+          <div className="timer-tab">
+            <div className="timer-modes">
+              <button 
+                className={`mode-btn ${timerMode === 'pomodoro' ? 'active' : ''}`}
+                onClick={() => switchTimerMode('pomodoro')}
+              >
+                🍅 Pomodoro
+              </button>
+              <button 
+                className={`mode-btn ${timerMode === 'shortBreak' ? 'active' : ''}`}
+                onClick={() => switchTimerMode('shortBreak')}
+              >
+                ☕ Short Break
+              </button>
+              <button 
+                className={`mode-btn ${timerMode === 'longBreak' ? 'active' : ''}`}
+                onClick={() => switchTimerMode('longBreak')}
+              >
+                🌴 Long Break
+              </button>
+            </div>
+
+            <div className="timer-display">
+              <div className="timer-circle">
+                <span className="timer-time">{formatTime(timeLeft)}</span>
+              </div>
+              <div className="timer-controls">
+                {!timerRunning && !timerPaused ? (
+                  <button onClick={startTimer} className="timer-btn start">
+                    ▶ Start
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={pauseTimer} className="timer-btn pause">
+                      ⏸ Pause
+                    </button>
+                    <button onClick={resetTimer} className="timer-btn reset">
+                      ↺ Reset
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="current-task">
+              <label>What are you studying?</label>
+              <select 
+                value={taskSubject} 
+                onChange={(e) => setTaskSubject(e.target.value)}
+                className="subject-select"
+              >
                 {subjects.map(subject => (
                   <option key={subject} value={subject}>{subject}</option>
                 ))}
               </select>
               <input
-                type="number"
-                value={taskDuration}
-                onChange={(e) => setTaskDuration(parseInt(e.target.value))}
-                min="5"
-                max="240"
-                step="5"
-                className="duration-input"
+                type="text"
+                value={currentTask}
+                onChange={(e) => setCurrentTask(e.target.value)}
+                placeholder="e.g., Chapter 5, Exercise set..."
+                className="task-input"
               />
-              <span>min</span>
             </div>
-            <button type="submit" className="add-task-btn">
-              Add Task
-            </button>
-          </form>
 
-          <div className="tasks-list">
-            <h3>Tasks for {format(selectedDate, 'MMMM d, yyyy')}</h3>
-            {tasksForSelectedDate.length === 0 ? (
-              <p className="empty-tasks">No tasks scheduled</p>
-            ) : (
-              tasksForSelectedDate.map(task => (
-                <div key={task.id} className={`task-item ${task.completed ? 'completed' : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={task.completed}
-                    onChange={() => toggleTask(task)}
-                    className="task-checkbox"
-                  />
-                  <div className="task-content">
-                    <span className="task-title">{task.title}</span>
-                    <div className="task-meta">
-                      <span className="task-subject">{task.subject}</span>
-                      <span className="task-duration">{task.duration} min</span>
-                    </div>
+            <div className="pomodoro-counter">
+              <span>Pomodoros completed today: </span>
+              <span className="counter-value">{pomodoroCount}</span>
+            </div>
+
+            <div className="recent-sessions">
+              <h3>Recent Sessions</h3>
+              <div className="sessions-list">
+                {studySessions.slice(0, 5).map(session => (
+                  <div key={session.id} className="session-item">
+                    <span className="session-time">
+                      {format(session.startTime?.toDate(), 'h:mm a')}
+                    </span>
+                    <span className="session-task">{session.task || 'Study'}</span>
+                    <span className="session-duration">
+                      {Math.round(session.duration / 60)} min
+                    </span>
                   </div>
-                  <button onClick={() => deleteTask(task.id)} className="delete-task-btn">
-                    🗑️
-                  </button>
-                </div>
-              ))
-            )}
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Statistics Tab */}
-      {activeTab === 'stats' && (
-        <div className="stats-tab">
-          <div className="weekly-summary">
-            <h3>This Week's Progress</h3>
-            <div className="weekly-chart">
-              {weeklyData.map(day => (
-                <div key={day.date} className="chart-bar-container">
-                  <div className="chart-bar-wrapper">
-                    <div 
-                      className="chart-bar"
-                      style={{ 
-                        height: `${Math.min((day.minutes / 240) * 100, 100)}%`,
-                        backgroundColor: day.minutes > 0 ? 'var(--primary)' : 'var(--border)'
-                      }}
+        {/* Schedule Tab */}
+        {activeTab === 'schedule' && (
+          <div className="schedule-tab">
+            <div className="date-selector">
+              <input
+                type="date"
+                value={format(selectedDate, 'yyyy-MM-dd')}
+                onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                className="date-input"
+              />
+            </div>
+
+            <form onSubmit={addTask} className="add-task-form">
+              <input
+                type="text"
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                placeholder="Task name..."
+                className="task-input"
+                required
+              />
+              <div className="task-form-row">
+                <select value={taskSubject} onChange={(e) => setTaskSubject(e.target.value)}>
+                  {subjects.map(subject => (
+                    <option key={subject} value={subject}>{subject}</option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  value={taskDuration}
+                  onChange={(e) => setTaskDuration(parseInt(e.target.value))}
+                  min="5"
+                  max="240"
+                  step="5"
+                  className="duration-input"
+                />
+                <span>min</span>
+              </div>
+              <button type="submit" className="add-task-btn">
+                Add Task
+              </button>
+            </form>
+
+            <div className="tasks-list">
+              <h3>Tasks for {format(selectedDate, 'MMMM d, yyyy')}</h3>
+              {tasksForSelectedDate.length === 0 ? (
+                <p className="empty-tasks">No tasks scheduled</p>
+              ) : (
+                tasksForSelectedDate.map(task => (
+                  <div key={task.id} className={`task-item ${task.completed ? 'completed' : ''}`}>
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={() => toggleTask(task)}
+                      className="task-checkbox"
                     />
-                  </div>
-                  <span className="chart-label">{day.day}</span>
-                  <span className="chart-value">{day.minutes}m</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="stats-grid">
-            <div className="stat-card-large">
-              <h4>Subject Breakdown</h4>
-              <div className="subject-breakdown">
-                {subjects.map(subject => {
-                  const subjectTime = studySessions
-                    .filter(s => s.subject === subject)
-                    .reduce((acc, s) => acc + (s.duration / 60), 0);
-                  
-                  if (subjectTime === 0) return null;
-                  
-                  const percentage = (subjectTime / totalStudyTime) * 100;
-                  
-                  return (
-                    <div key={subject} className="subject-stat">
-                      <span className="subject-name">{subject}</span>
-                      <div className="subject-bar">
-                        <div 
-                          className="subject-fill"
-                          style={{ 
-                            width: `${percentage}%`,
-                            backgroundColor: getSubjectColor(subject)
-                          }}
-                        />
+                    <div className="task-content">
+                      <span className="task-title">{task.title}</span>
+                      <div className="task-meta">
+                        <span className="task-subject">{task.subject}</span>
+                        <span className="task-duration">{task.duration} min</span>
                       </div>
-                      <span className="subject-time">{subjectTime.toFixed(1)}h</span>
                     </div>
-                  );
-                })}
+                    <button onClick={() => deleteTask(task.id)} className="delete-task-btn">
+                      🗑️
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Statistics Tab */}
+        {activeTab === 'stats' && (
+          <div className="stats-tab">
+            <div className="weekly-summary">
+              <h3>This Week's Progress</h3>
+              <div className="weekly-chart">
+                {weeklyData.map(day => (
+                  <div key={day.date} className="chart-bar-container">
+                    <div className="chart-bar-wrapper">
+                      <div 
+                        className="chart-bar"
+                        style={{ 
+                          height: `${Math.min((day.minutes / 240) * 100, 100)}%`,
+                          backgroundColor: day.minutes > 0 ? 'var(--primary)' : 'var(--border)'
+                        }}
+                      />
+                    </div>
+                    <span className="chart-label">{day.day}</span>
+                    <span className="chart-value">{day.minutes}m</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="stat-card-large">
-              <h4>Study Streak</h4>
-              <div className="streak-display">
-                <div className="streak-circle">
-                  <span className="streak-number">{calculateStreak(studySessions)}</span>
-                  <span className="streak-label">days</span>
+            <div className="stats-grid">
+              <div className="stat-card-large">
+                <h4>Subject Breakdown</h4>
+                <div className="subject-breakdown">
+                  {subjects.map(subject => {
+                    const subjectTime = studySessions
+                      .filter(s => s.subject === subject)
+                      .reduce((acc, s) => acc + (s.duration / 60), 0);
+                    
+                    if (subjectTime === 0) return null;
+                    
+                    const percentage = (subjectTime / totalStudyTime) * 100;
+                    
+                    return (
+                      <div key={subject} className="subject-stat">
+                        <span className="subject-name">{subject}</span>
+                        <div className="subject-bar">
+                          <div 
+                            className="subject-fill"
+                            style={{ 
+                              width: `${percentage}%`,
+                              backgroundColor: getSubjectColor(subject)
+                            }}
+                          />
+                        </div>
+                        <span className="subject-time">{subjectTime.toFixed(1)}h</span>
+                      </div>
+                    );
+                  })}
                 </div>
-                <p className="streak-message">
-                  {getStreakMessage(calculateStreak(studySessions))}
-                </p>
               </div>
-            </div>
 
-            <div className="stat-card-large">
-              <h4>Productivity Insights</h4>
-              <div className="insights-list">
-                <div className="insight-item">
-                  <span>Best study day:</span>
-                  <strong>{getBestDay(weeklyData)}</strong>
+              <div className="stat-card-large">
+                <h4>Study Streak</h4>
+                <div className="streak-display">
+                  <div className="streak-circle">
+                    <span className="streak-number">{calculateStreak(studySessions)}</span>
+                    <span className="streak-label">days</span>
+                  </div>
+                  <p className="streak-message">
+                    {getStreakMessage(calculateStreak(studySessions))}
+                  </p>
                 </div>
-                <div className="insight-item">
-                  <span>Average session:</span>
-                  <strong>{(totalStudyTime / totalPomodoros || 0).toFixed(1)} min</strong>
-                </div>
-                <div className="insight-item">
-                  <span>Most productive subject:</span>
-                  <strong>{getTopSubject(studySessions)}</strong>
-                </div>
-                <div className="insight-item">
-                  <span>Completion rate:</span>
-                  <strong>{getCompletionRate(tasks)}%</strong>
+              </div>
+
+              <div className="stat-card-large">
+                <h4>Productivity Insights</h4>
+                <div className="insights-list">
+                  <div className="insight-item">
+                    <span>Best study day:</span>
+                    <strong>{getBestDay(weeklyData)}</strong>
+                  </div>
+                  <div className="insight-item">
+                    <span>Average session:</span>
+                    <strong>{(totalStudyTime / totalPomodoros || 0).toFixed(1)} min</strong>
+                  </div>
+                  <div className="insight-item">
+                    <span>Most productive subject:</span>
+                    <strong>{getTopSubject(studySessions)}</strong>
+                  </div>
+                  <div className="insight-item">
+                    <span>Completion rate:</span>
+                    <strong>{getCompletionRate(tasks)}%</strong>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

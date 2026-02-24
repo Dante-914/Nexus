@@ -4,6 +4,7 @@ import {
   signInWithGoogle, 
   signUpWithEmail,
   signInWithEmail,
+  resetPassword,
   logout 
 } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';

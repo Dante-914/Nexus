@@ -322,7 +322,8 @@ export default function Todos() {
   }
 
   return (
-    <div className="todos-container">
+    <div className="page-container">
+      <div className="todos-container">
       {/* Motivational Header */}
       <div 
         ref={headerRef}
@@ -334,7 +335,7 @@ export default function Todos() {
           <p>You've completed {stats.completed} out of {stats.total} tasks</p>
         </div>
       </div>
-
+    
       {/* Stats Cards */}
       <div 
         ref={statsRef}
@@ -659,6 +660,7 @@ export default function Todos() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

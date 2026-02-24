@@ -3,21 +3,22 @@ import {
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup, 
-  signOut, 
+  signOut,
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, 
-  updateProfile, 
-  } from "firebase/auth";
-  import {getFirestore} from "firebase/firestore";
+  signInWithEmailAndPassword,
+  updateProfile,
+  sendPasswordResetEmail
+} from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCgWyZMSAhhAZSnig1sWu8rQ-8oYg4dzJY",
-  authDomain: "all-purpose-app-b4ec7.firebaseapp.com",
-  projectId: "all-purpose-app-b4ec7",
-  storageBucket: "all-purpose-app-b4ec7.firebasestorage.app",
-  messagingSenderId: "955592643540",
-  appId: "1:955592643540:web:702daefdfc4bbf0f483c41"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
@@ -41,7 +42,6 @@ export const signInWithGoogle = async () => {
 export const signUpWithEmail = async (email, password, username) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    // Update profile with username
     await updateProfile(userCredential.user, {
       displayName: username
     });
@@ -60,6 +60,27 @@ export const signInWithEmail = async (email, password) => {
   } catch (error) {
     console.error("Error signing in with email:", error);
     throw error;
+  }
+};
+
+// Password Reset
+export const resetPassword = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return { success: true, message: "Password reset email sent!" };
+  } catch (error) {
+    console.error("Error sending password reset email:", error);
+    
+    // Handle specific error codes
+    if (error.code === 'auth/user-not-found') {
+      throw new Error("No account found with this email address.");
+    } else if (error.code === 'auth/invalid-email') {
+      throw new Error("Invalid email address format.");
+    } else if (error.code === 'auth/too-many-requests') {
+      throw new Error("Too many attempts. Please try again later.");
+    } else {
+      throw new Error("Failed to send reset email. Please try again.");
+    }
   }
 };
 

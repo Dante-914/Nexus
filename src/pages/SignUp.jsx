@@ -8,10 +8,12 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { signUpWithEmail } = useAuth();
+  const { signUpWithEmail, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -30,6 +32,10 @@ export default function SignUp() {
       return setError('Username must be at least 3 characters');
     }
 
+    if (!email.includes('@')) {
+      return setError('Please enter a valid email address');
+    }
+
     try {
       setError('');
       setLoading(true);
@@ -40,6 +46,8 @@ export default function SignUp() {
         setError('Email already in use');
       } else if (error.code === 'auth/invalid-email') {
         setError('Invalid email address');
+      } else if (error.code === 'auth/weak-password') {
+        setError('Password is too weak');
       } else {
         setError('Failed to create account: ' + error.message);
       }
@@ -48,81 +56,136 @@ export default function SignUp() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setError('');
+      setLoading(true);
+      await signInWithGoogle();
+      navigate('/');
+    } catch (error) {
+      setError('Failed to sign in with Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1>Create Account</h1>
-        <p>Join MyApp to get started</p>
-        
-        {error && <div className="error-message">{error}</div>}
-        
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              placeholder="Enter your username"
-            />
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h1>NEXUS</h1>
+            <p className="auth-subtitle">Create Account</p>
           </div>
           
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="Enter your email"
-            />
+          {error && <div className="error-message">{error}</div>}
+          
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                placeholder="Enter your username"
+                className="form-input"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="Enter your email"
+                className="form-input"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <div className="password-input-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Enter your password"
+                  className="form-input password-input"
+                  minLength="6"
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex="-1"
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
+              {password && password.length < 6 && (
+                <p className="password-hint">Password must be at least 6 characters</p>
+              )}
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="confirm-password">Confirm Password</label>
+              <div className="password-input-wrapper">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirm-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  placeholder="Confirm your password"
+                  className="form-input password-input"
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  tabIndex="-1"
+                >
+                  {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
+              {confirmPassword && password !== confirmPassword && (
+                <p className="password-hint error">Passwords do not match</p>
+              )}
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="auth-button primary"
+            >
+              {loading ? 'Creating Account...' : 'Sign Up'}
+            </button>
+          </form>
+          
+          <div className="auth-divider">
+            <span>or</span>
           </div>
           
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="Enter your password"
-              minLength="6"
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="confirm-password">Confirm Password</label>
-            <input
-              type="password"
-              id="confirm-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              placeholder="Confirm your password"
-            />
-          </div>
-          
-          <button type="submit" disabled={loading} className="auth-button">
-            {loading ? 'Creating Account...' : 'Sign Up'}
+          <button 
+            onClick={handleGoogleSignIn} 
+            className="google-btn" 
+            disabled={loading}
+          >
+            <img src="https://www.google.com/favicon.ico" alt="Google" />
+            Sign up with Google
           </button>
-        </form>
-        
-        <div className="auth-divider">
-          <span>or</span>
+          
+          <p className="auth-redirect">
+            Already have an account? <Link to="/login">Sign In</Link>
+          </p>
         </div>
-        
-        <button onClick={() => signInWithGoogle()} className="google-btn">
-          <img src="https://www.google.com/favicon.ico" alt="Google" />
-          Sign up with Google
-        </button>
-        
-        <p className="auth-redirect">
-          Already have an account? <Link to="/login">Sign In</Link>
-        </p>
       </div>
     </div>
   );

@@ -1,219 +1,168 @@
 import { db } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { 
+  collection, 
+  addDoc, 
+  deleteDoc, 
+  doc, 
+  query, 
+  where, 
+  getDocs,
+  onSnapshot,
+  serverTimestamp 
+} from 'firebase/firestore';
 
-class UserPreferencesService {
-  constructor() {
-    this.categories = [
-      'general', 'business', 'technology', 'entertainment', 
-      'health', 'science', 'sports', 'politics', 'world'
-    ];
+// Save article to bookmarks
+export const saveArticle = async (userId, article) => {
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
+
+  try {
+    // Check if already saved
+    const q = query(
+      collection(db, 'savedArticles'),
+      where('userId', '==', userId),
+      where('url', '==', article.url)
+    );
     
-    this.interactionWeights = {
-      click: 1,
-      read: 3,
-      share: 5,
-      bookmark: 4,
-      comment: 2,
-      timeSpent: 0.1 // per minute
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      // Article already saved, return the existing ID
+      return { exists: true, id: snapshot.docs[0].id };
+    }
+
+    // Prepare article data for saving
+    const articleData = {
+      userId,
+      url: article.url,
+      title: article.title || 'Untitled',
+      description: article.description || article.content || '',
+      imageUrl: article.imageUrl || article.urlToImage || '',
+      source: article.source || 'Unknown',
+      publishedAt: article.publishedAt || new Date().toISOString(),
+      savedAt: serverTimestamp()
     };
+
+    const docRef = await addDoc(collection(db, 'savedArticles'), articleData);
+    console.log('Article saved with ID:', docRef.id);
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error('Error saving article:', error);
+    throw error;
+  }
+};
+
+// Remove article from bookmarks
+export const removeSavedArticle = async (articleId) => {
+  if (!articleId) {
+    throw new Error('Article ID is required');
   }
 
-  // Get user preferences
-  async getUserPreferences(userId) {
-    try {
-      const prefDoc = await getDoc(doc(db, 'userPreferences', userId));
-      if (prefDoc.exists()) {
-        return prefDoc.data();
-      } else {
-        // Initialize default preferences
-        const defaultPrefs = {
-          userId,
-          followedTopics: [],
-          followedSources: [],
-          readHistory: [],
-          interests: {},
-          bookmarks: [],
-          readingTime: 0,
-          lastUpdated: new Date().toISOString()
-        };
-        await setDoc(doc(db, 'userPreferences', userId), defaultPrefs);
-        return defaultPrefs;
-      }
-    } catch (error) {
-      console.error('Error getting preferences:', error);
-      throw error;
+  try {
+    await deleteDoc(doc(db, 'savedArticles', articleId));
+    return { success: true };
+  } catch (error) {
+    console.error('Error removing article:', error);
+    throw error;
+  }
+};
+
+// Listen to saved articles
+export const listenToSavedArticles = (userId, callback) => {
+  if (!userId) {
+    callback([]);
+    return () => {};
+  }
+  
+  const q = query(
+    collection(db, 'savedArticles'),
+    where('userId', '==', userId)
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const articles = [];
+    snapshot.forEach((doc) => {
+      articles.push({ id: doc.id, ...doc.data() });
+    });
+    callback(articles);
+  }, (error) => {
+    console.error('Error listening to saved articles:', error);
+    callback([]);
+  });
+};
+
+// Add to watchlist
+export const addToWatchlist = async (userId, keyword) => {
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
+
+  if (!keyword || !keyword.trim()) {
+    throw new Error('Keyword is required');
+  }
+
+  try {
+    // Check if already exists
+    const q = query(
+      collection(db, 'watchlist'),
+      where('userId', '==', userId),
+      where('keyword', '==', keyword.toLowerCase().trim())
+    );
+    
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      return { exists: true, id: snapshot.docs[0].id };
     }
+
+    const docRef = await addDoc(collection(db, 'watchlist'), {
+      keyword: keyword.toLowerCase().trim(),
+      userId,
+      createdAt: serverTimestamp()
+    });
+    
+    console.log('Watchlist item added with ID:', docRef.id);
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error('Error adding to watchlist:', error);
+    throw error;
+  }
+};
+
+// Remove from watchlist
+export const removeFromWatchlist = async (watchlistId) => {
+  if (!watchlistId) {
+    throw new Error('Watchlist ID is required');
   }
 
-  // Follow a topic
-  async followTopic(userId, topic) {
-    try {
-      await updateDoc(doc(db, 'userPreferences', userId), {
-        followedTopics: arrayUnion(topic),
-        lastUpdated: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Error following topic:', error);
-      throw error;
-    }
+  try {
+    await deleteDoc(doc(db, 'watchlist', watchlistId));
+    return { success: true };
+  } catch (error) {
+    console.error('Error removing from watchlist:', error);
+    throw error;
   }
+};
 
-  // Unfollow a topic
-  async unfollowTopic(userId, topic) {
-    try {
-      await updateDoc(doc(db, 'userPreferences', userId), {
-        followedTopics: arrayRemove(topic),
-        lastUpdated: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Error unfollowing topic:', error);
-      throw error;
-    }
+// Listen to watchlist
+export const listenToWatchlist = (userId, callback) => {
+  if (!userId) {
+    callback([]);
+    return () => {};
   }
+  
+  const q = query(
+    collection(db, 'watchlist'),
+    where('userId', '==', userId)
+  );
 
-  // Track article interaction
-  async trackInteraction(userId, articleId, interactionType, duration = 0) {
-    try {
-      const prefDoc = await getDoc(doc(db, 'userPreferences', userId));
-      const prefs = prefDoc.data();
-      
-      const weight = this.interactionWeights[interactionType] || 1;
-      const timeWeight = duration * this.interactionWeights.timeSpent;
-      
-      // Update article-specific stats
-      const articleStats = prefs.articleStats || {};
-      if (!articleStats[articleId]) {
-        articleStats[articleId] = {
-          interactions: {},
-          totalWeight: 0,
-          lastRead: null
-        };
-      }
-      
-      articleStats[articleId].interactions[interactionType] = 
-        (articleStats[articleId].interactions[interactionType] || 0) + 1;
-      articleStats[articleId].totalWeight += weight + timeWeight;
-      articleStats[articleId].lastRead = new Date().toISOString();
-      
-      // Update category interests based on article metadata
-      // This would need article category info passed in
-      
-      await updateDoc(doc(db, 'userPreferences', userId), {
-        articleStats,
-        readingTime: (prefs.readingTime || 0) + duration,
-        lastUpdated: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Error tracking interaction:', error);
-    }
-  }
-
-  // Get personalized recommendations
-  async getRecommendations(userId, availableArticles) {
-    try {
-      const prefs = await this.getUserPreferences(userId);
-      
-      // Calculate interest scores for each article
-      const scoredArticles = availableArticles.map(article => {
-        let score = 0;
-        
-        // Boost from followed topics
-        if (prefs.followedTopics) {
-          prefs.followedTopics.forEach(topic => {
-            if (article.title?.toLowerCase().includes(topic.toLowerCase()) ||
-                article.description?.toLowerCase().includes(topic.toLowerCase())) {
-              score += 10;
-            }
-          });
-        }
-        
-        // Boost from followed sources
-        if (prefs.followedSources?.includes(article.source?.id)) {
-          score += 5;
-        }
-        
-        // Boost from category preferences
-        if (prefs.interests && prefs.interests[article.category]) {
-          score += prefs.interests[article.category] * 2;
-        }
-        
-        // Recency boost
-        const articleDate = new Date(article.publishedAt);
-        const daysAgo = (Date.now() - articleDate) / (1000 * 60 * 60 * 24);
-        score += Math.max(0, 10 - daysAgo);
-        
-        return { ...article, recommendationScore: score };
-      });
-      
-      // Sort by score and return top articles
-      return scoredArticles
-        .sort((a, b) => b.recommendationScore - a.recommendationScore)
-        .filter(article => article.recommendationScore > 0);
-    } catch (error) {
-      console.error('Error getting recommendations:', error);
-      return availableArticles;
-    }
-  }
-
-  // Get "For You" personalized feed
-  async getForYouFeed(userId, page = 1) {
-    try {
-      const prefs = await this.getUserPreferences(userId);
-      
-      // Build query based on preferences
-      const topics = prefs.followedTopics || [];
-      const sources = prefs.followedSources || [];
-      
-      // This would call your news API with personalized parameters
-      const response = await fetch('/api/news/personalized', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topics,
-          sources,
-          page,
-          interests: prefs.interests
-        })
-      });
-      
-      return response.json();
-    } catch (error) {
-      console.error('Error getting for you feed:', error);
-      throw error;
-    }
-  }
-
-  // Save bookmark
-  async addBookmark(userId, article) {
-    try {
-      await updateDoc(doc(db, 'userPreferences', userId), {
-        bookmarks: arrayUnion({
-          id: article.id,
-          title: article.title,
-          url: article.url,
-          savedAt: new Date().toISOString()
-        })
-      });
-    } catch (error) {
-      console.error('Error adding bookmark:', error);
-      throw error;
-    }
-  }
-
-  // Remove bookmark
-  async removeBookmark(userId, articleId) {
-    try {
-      const prefs = await this.getUserPreferences(userId);
-      const updatedBookmarks = prefs.bookmarks.filter(b => b.id !== articleId);
-      
-      await updateDoc(doc(db, 'userPreferences', userId), {
-        bookmarks: updatedBookmarks
-      });
-    } catch (error) {
-      console.error('Error removing bookmark:', error);
-      throw error;
-    }
-  }
-}
-
-export default new UserPreferencesService();
+  return onSnapshot(q, (snapshot) => {
+    const items = [];
+    snapshot.forEach((doc) => {
+      items.push({ id: doc.id, ...doc.data() });
+    });
+    callback(items);
+  }, (error) => {
+    console.error('Error listening to watchlist:', error);
+    callback([]);
+  });
+};

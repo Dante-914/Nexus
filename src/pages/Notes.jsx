@@ -180,9 +180,10 @@ export default function Notes() {
   }
 
   return (
-    <div className="notes-container">
-      <div className="notes-sidebar">
-        <div className="notes-header">
+    <div className="page-container">
+      <div className="note-container">
+        <div className="notes-sidebar">
+         <div className="notes-header">
           <h2>📝 My Notes</h2>
           <button onClick={createNewNote} className="new-note-btn">
             + New Note
@@ -262,7 +263,7 @@ export default function Notes() {
           )}
         </div>
       </div>
-
+    
       <div className="notes-editor">
         {isEditing ? (
           <div className="editor-container">
@@ -322,5 +323,6 @@ export default function Notes() {
         )}
       </div>
     </div>
+  </div>
   );
 }

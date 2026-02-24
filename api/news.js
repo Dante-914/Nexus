@@ -1,83 +1,75 @@
-import fetch from 'node-fetch';
-import { parseString } from 'xml2js';
+import axios from 'axios';
 
 export default async function handler(req, res) {
-  const { source } = req.query;
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
   
-  const NIGERIAN_FEEDS = {
-    vanguard: 'https://www.vanguardngr.com/feed/',
-    punch: 'https://punchng.com/feed/',
-    guardian_nigeria: 'https://guardian.ng/feed/',
-    premium_times: 'https://www.premiumtimesng.com/feed',
-    channelstv: 'https://www.channelstv.com/feed/',
-    nigerian_tribune: 'https://tribuneonlineng.com/feed/'
-  };
-
-  const SPORTS_SOURCES = {
-    espn: 'https://www.espn.com/espn/rss/news',
-    bbc_sport: 'http://feeds.bbci.co.uk/sport/rss.xml',
-    sky_sports: 'https://www.skysports.com/rss/12040',
-    nigerian_sports: 'https://www.completesports.com/feed/',
-    soccer_news: 'https://www.goal.com/feeds/en/news'
-  };
-
+  const { sources = 'all', q, page = 1, pageSize = 20 } = req.query;
+  
   try {
-    const feedUrl = NIGERIAN_FEEDS[source] || SPORTS_SOURCES[source];
-    if (!feedUrl) {
-      return res.status(400).json({ error: 'Invalid source' });
-    }
+    let articles = [];
+    let totalResults = 0;
 
-    const response = await fetch(feedUrl);
-    const xml = await response.text();
-    
-    const articles = await parseRSS(xml, source);
-    
-    res.status(200).json(articles);
-  } catch (error) {
-    console.error('Error fetching RSS:', error);
-    res.status(500).json({ error: 'Failed to fetch RSS feed' });
-  }
-}
+    // Fetch from The Guardian
+    if (sources === 'all' || sources === 'guardian') {
+      const guardianRes = await axios.get('https://content.guardianapis.com/search', {
+        params: {
+          'api-key': process.env.VITE_GUARDIAN_API_KEY,
+          q: q || undefined,
+          page,
+          'page-size': pageSize,
+          'show-fields': 'thumbnail,trailText',
+          'show-tags': 'contributor'
+        }
+      });
 
-async function parseRSS(xml, source) {
-  return new Promise((resolve, reject) => {
-    parseString(xml, (err, result) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      const items = result.rss?.channel[0]?.item || [];
-      const articles = items.map(item => ({
-        title: item.title[0],
-        description: item.description[0],
-        content: item['content:encoded']?.[0] || item.description[0],
-        url: item.link[0],
-        imageUrl: extractImage(item),
-        source: source,
-        publishedAt: item.pubDate[0],
-        author: item['dc:creator']?.[0] || 'Unknown'
+      const guardianArticles = guardianRes.data.response.results.map(article => ({
+        title: article.webTitle,
+        description: article.fields?.trailText || '',
+        url: article.webUrl,
+        urlToImage: article.fields?.thumbnail,
+        publishedAt: article.webPublicationDate,
+        source: { name: 'The Guardian', id: 'guardian' },
+        content: article.fields?.trailText
       }));
 
-      resolve(articles);
-    });
-  });
-}
+      articles = [...articles, ...guardianArticles];
+      totalResults += guardianRes.data.response.total;
+    }
 
-function extractImage(item) {
-  // Try to extract image from media:content
-  if (item['media:content'] && item['media:content'][0].$.url) {
-    return item['media:content'][0].$.url;
+    // Fetch from NewsAPI
+    if (sources === 'all' || sources === 'newsapi') {
+      const newsApiRes = await axios.get('https://newsapi.org/v2/everything', {
+        params: {
+          apiKey: process.env.VITE_NEWS_API_KEY,
+          q: q || 'latest',
+          page,
+          pageSize,
+          language: 'en',
+          sortBy: 'publishedAt'
+        }
+      });
+
+      const newsApiArticles = newsApiRes.data.articles.map(article => ({
+        ...article,
+        source: { name: article.source.name, id: 'newsapi' }
+      }));
+
+      articles = [...articles, ...newsApiArticles];
+      totalResults += newsApiRes.data.totalResults;
+    }
+
+    // Sort by date
+    articles.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+
+    res.status(200).json({
+      articles,
+      totalResults,
+      page: parseInt(page),
+      pageSize: parseInt(pageSize)
+    });
+  } catch (error) {
+    console.error('News API Error:', error);
+    res.status(500).json({ error: 'Failed to fetch news' });
   }
-  
-  // Try to extract from description
-  const description = item.description[0];
-  const imgRegex = /<img[^>]+src="([^">]+)"/;
-  const match = description.match(imgRegex);
-  if (match) {
-    return match[1];
-  }
-  
-  // Default image
-  return 'https://via.placeholder.com/300x200?text=News';
 }

@@ -212,15 +212,16 @@ export default function MoodTracker() {
   }
 
   return (
-    <div className="mood-container">
-      <div className="mood-header">
-        <h1>😊 Mood Tracker</h1>
-        <div className="mood-summary">
-          <span>Average Mood: </span>
-          <span className="avg-mood">
+    <div className="page-container">
+      <div className="mood-container">
+        <div className="mood-header">
+         <h1>😊 Mood Tracker</h1>
+         <div className="mood-summary">
+           <span>Average Mood: </span>
+           <span className="avg-mood">
             {(moodEntries.reduce((acc, entry) => acc + entry.mood, 0) / moodEntries.length || 0).toFixed(1)}
             /5
-          </span>
+            </span>
           <span>Total Entries: {moodEntries.length}</span>
         </div>
       </div>
@@ -577,6 +578,7 @@ export default function MoodTracker() {
             )}
           </>
         )}
+        </div>
       </div>
     </div>
   );
